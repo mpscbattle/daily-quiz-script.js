@@ -1,1 +1,0 @@
-# daily-quiz-script.js
