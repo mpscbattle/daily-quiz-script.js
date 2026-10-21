@@ -2,11 +2,16 @@ var currentIndex = 0;
 var userAnswers = [];
 var timerInterval = null;
 var totalSecondsRemaining = 0;
+var letters = ["A", "B", "C", "D", "E", "F"];
 
 function decodeEntities(str) {
   var txt = document.createElement("textarea");
   txt.innerHTML = str;
   return txt.value;
+}
+
+function cleanOptionText(str, idx) {
+  return str.replace(/^[A-Da-d][\.\,\)\-\s]+/, "").trim();
 }
 
 function startTimer() {
@@ -79,11 +84,14 @@ function loadQuestion(index) {
   if (!window.quizData || !quizData[index]) return;
   var q = quizData[index];
   var counter = document.getElementById("quizCounter");
+  var qNumber = document.getElementById("questionNumber");
   var qText = document.getElementById("questionText");
   var hContent = document.getElementById("hintContent");
   var optContainer = document.getElementById("optionsContainer");
 
   if (counter) counter.innerHTML = (index + 1) + " / " + quizData.length;
+  
+  if (qNumber) qNumber.innerHTML = "Question : " + (index + 1);
   if (qText) qText.innerHTML = decodeEntities(q.question);
   
   if (hContent) {
@@ -102,7 +110,11 @@ function loadQuestion(index) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "g-option-btn";
-      btn.innerHTML = decodeEntities(optText);
+      
+      var prefix = letters[optIdx] || (optIdx + 1);
+      var cleanText = cleanOptionText(optText, optIdx);
+
+      btn.innerHTML = "<span class='opt-prefix'>" + prefix + "</span><span>" + decodeEntities(cleanText) + "</span>";
 
       if (hasAnswered) {
         btn.disabled = true;
@@ -193,6 +205,11 @@ function showScorecard() {
     var card = document.createElement("div");
     card.className = "review-card";
 
+    var qBadge = document.createElement("div");
+    qBadge.className = "review-q-badge";
+    qBadge.innerHTML = "Question : " + (idx + 1);
+    card.appendChild(qBadge);
+
     var qTitle = document.createElement("div");
     qTitle.className = "review-q-text";
     qTitle.innerHTML = decodeEntities(item.question);
@@ -214,14 +231,17 @@ function showScorecard() {
       var optDiv = document.createElement("div");
       optDiv.className = "review-opt";
 
+      var prefix = letters[optIdx] || (optIdx + 1);
+      var cleanText = cleanOptionText(optText, optIdx);
+
       if (optIdx === item.correctIndex) {
         optDiv.classList.add("opt-correct");
-        optDiv.innerHTML = decodeEntities(optText) + " ";
+        optDiv.innerHTML = "<span class='opt-prefix'>" + prefix + "</span><span>" + decodeEntities(cleanText) + "</span>";
       } else if (optIdx === uAns) {
         optDiv.classList.add("opt-wrong");
-        optDiv.innerHTML = decodeEntities(optText) + " ";
+        optDiv.innerHTML = "<span class='opt-prefix'>" + prefix + "</span><span>" + decodeEntities(cleanText) + "</span>";
       } else {
-        optDiv.innerHTML = decodeEntities(optText);
+        optDiv.innerHTML = "<span class='opt-prefix'>" + prefix + "</span><span>" + decodeEntities(cleanText) + "</span>";
       }
 
       optsBox.appendChild(optDiv);
@@ -237,6 +257,15 @@ function showScorecard() {
 
     reviewContainer.appendChild(card);
   });
+
+  var nextTestBox = document.getElementById("nextTestContainer");
+  var nextTestA = document.getElementById("nextTestLink");
+  if (typeof nextTestURL !== 'undefined' && nextTestURL && nextTestURL.trim() !== "") {
+    nextTestA.href = nextTestURL;
+    nextTestBox.style.display = "block";
+  } else {
+    nextTestBox.style.display = "none";
+  }
 
   document.getElementById("quizMainBox").style.display = "none";
   document.getElementById("scorecardBox").style.display = "block";
